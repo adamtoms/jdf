@@ -1,5 +1,5 @@
 {
-  "name": "joe-pritchard/jdf",
+  "name": "AdamToms/jdf",
   "description": "A Simple package for creating JDF files and sending them via JMF",
   "type": "library",
   "keywords": ["jdf", "jmf", "digital print", "laravel-5-package"],
