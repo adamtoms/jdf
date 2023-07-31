@@ -160,6 +160,10 @@ class BaseJDF
                 $remote_path = 'file://' . $remote_path;
             }
         }
+        
+        // ensure the filename is url encoded
+        $file_name = basename($remote_path);
+        $remote_path = str_replace($file_name, urlencode(urldecode($file_name)), $remote_path);
 
         return $remote_path;
     }
