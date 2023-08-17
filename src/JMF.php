@@ -95,37 +95,70 @@ class JMF extends BaseJDF
             }
         }
 
-        $curl_handle = curl_init($target);
-        curl_setopt($curl_handle, CURLOPT_POST, 1);
-        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl_handle, CURLOPT_HTTPHEADER, [
-            'Content-type: application/vnd.cip4-jmf+xml',
-        ]);
+        $payload = '<?xml version="1.0" encoding="utf-8"?><JMF xmlns:xsi="xsi" xmlns="http://www.CIP4.org/JDFSchema_1_1" xsi:xmlns="http://www.w3.org/2001/XMLSchema-instance" SenderID="Artery JDF Interface" Version="1.4" DeviceID="Artery Print Processing Workflow" TimeStamp="2023-08-16T15:19:32+00:00"><Query Type="QueueStatus" xsi:type="QueryQueueStatus" ID="$2y$10$nk7n7QJAg1u3NzCO82uZr.WokgmypiMZ9yjO0Sbk57NF75bOYmRNC"><QueueFilter QueueEntryDetails="Brief"/></Query></JMF>';
+        $payload = '<?xml version="1.0" encoding="utf-8"?>
+                    <JMF xmlns:xsi="xsi" xmlns="http://www.CIP4.org/JDFSchema_1_1" xsi:xmlns="http://www.w3.org/2001/XMLSchema-instance" SenderID="Artery JDF Interface" Version="1.4" DeviceID="Artery Print Processing Workflow" TimeStamp="2023-08-16T15:19:24+00:00"><Query Type="QueueStatus" xsi:type="QueryQueueStatus" ID="$2y$10$J0.yaADU094whmeBk9NT9Of//6itc3Hhh3ry3NJrOv.fSVMaoQ6rO"><QueueFilter QueueEntryDetails="Brief"/></Query></JMF>';
 
-        $raw_result = curl_exec($curl_handle);
-        curl_close($curl_handle);
+        $attempts = 0;
+        $attempt_limit = 2;
+        $result =  null;
 
-        Log::debug($payload);
+        while ($attempts < $attempt_limit) {
 
-        if ($initialise) {
-            $this->initialiseMessage('JMF');
+            $attempts ++;
+
+            Log::debug("Attempt: " . $attempts);
+            Log::debug("Payload: " . $payload);
+
+            $curl_handle = curl_init($target);
+            curl_setopt($curl_handle, CURLOPT_POST, 1);
+            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl_handle, CURLOPT_HTTPHEADER, [
+                'Content-type: application/vnd.cip4-jmf+xml',
+            ]);
+            $raw_result = curl_exec($curl_handle);
+            curl_close($curl_handle);
+
+            if ($initialise) {
+                $this->initialiseMessage('JMF');
+            }
+
+            if ($raw_result === false) {
+                if($attempts == $attempt_limit){
+                    throw new JMFSubmissionException('Failed to communicate with the JMF server');
+                }else{
+                    Log::debug("Raw result false attempt " . $attempts . ' trying again.');
+                    continue;
+                }
+            }
+
+            try {
+                $result = new SimpleXMLElement($raw_result);
+                Log::debug($result->Response->asXML());
+
+            } catch (\Exception $exception) {
+                if($attempts == $attempt_limit){
+                    throw new JMFResponseException('The JMF server responded with Invalid XML: ' . $raw_result);
+                }else{
+                    Log::debug("Exception: " . 'The JMF server responded with Invalid XML: ' . $raw_result . " attempts:" . $attempts . ' trying again.');
+                    continue;
+                }
+            }
+
+            if ((int)$result->Response->attributes()->ReturnCode > 0) {
+
+                if($attempts == $attempt_limit){
+                    Log::debug($result->asXML());
+                    throw new JMFReturnCodeException((string)$result->Response->Notification->Comment);    
+                }else{
+                    Log::debug("Exception from JMF server: " . (string)$result->Response->Notification->Comment . ' trying again.');
+                    continue;
+                }
+            }
+
+            break;
         }
-
-        if ($raw_result === false) {
-            throw new JMFSubmissionException('Failed to communicate with the JMF server');
-        }
-        try {
-            $result = new SimpleXMLElement($raw_result);
-        } catch (\Exception $exception) {
-            throw new JMFResponseException('The JMF server responded with Invalid XML: ' . $raw_result);
-        }
-        if ((int)$result->Response->attributes()->ReturnCode > 0) {
-            Log::debug($result->asXML());
-            throw new JMFReturnCodeException((string)$result->Response->Notification->Comment);
-        }
-
-        Log::debug($result->Response->asXML());
 
         return $result;
     }
