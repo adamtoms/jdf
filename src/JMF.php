@@ -95,10 +95,6 @@ class JMF extends BaseJDF
             }
         }
 
-        $payload = '<?xml version="1.0" encoding="utf-8"?><JMF xmlns:xsi="xsi" xmlns="http://www.CIP4.org/JDFSchema_1_1" xsi:xmlns="http://www.w3.org/2001/XMLSchema-instance" SenderID="Artery JDF Interface" Version="1.4" DeviceID="Artery Print Processing Workflow" TimeStamp="2023-08-16T15:19:32+00:00"><Query Type="QueueStatus" xsi:type="QueryQueueStatus" ID="$2y$10$nk7n7QJAg1u3NzCO82uZr.WokgmypiMZ9yjO0Sbk57NF75bOYmRNC"><QueueFilter QueueEntryDetails="Brief"/></Query></JMF>';
-        $payload = '<?xml version="1.0" encoding="utf-8"?>
-                    <JMF xmlns:xsi="xsi" xmlns="http://www.CIP4.org/JDFSchema_1_1" xsi:xmlns="http://www.w3.org/2001/XMLSchema-instance" SenderID="Artery JDF Interface" Version="1.4" DeviceID="Artery Print Processing Workflow" TimeStamp="2023-08-16T15:19:24+00:00"><Query Type="QueueStatus" xsi:type="QueryQueueStatus" ID="$2y$10$J0.yaADU094whmeBk9NT9Of//6itc3Hhh3ry3NJrOv.fSVMaoQ6rO"><QueueFilter QueueEntryDetails="Brief"/></Query></JMF>';
-
         $attempts = 0;
         $attempt_limit = 2;
         $result =  null;
