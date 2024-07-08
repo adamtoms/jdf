@@ -137,7 +137,7 @@ class JMF extends BaseJDF
                 if($attempts == $attempt_limit){
                     throw new JMFResponseException('The JMF server responded with Invalid XML: ' . $raw_result);
                 }else{
-                    Log::debug("Exception: " . 'The JMF server responded with Invalid XML: ' . $raw_result . " attempts:" . $attempts . ' trying again.');
+                    Log::info("Exception: " . 'The JMF server responded with Invalid XML: ' . $raw_result . " attempts:" . $attempts . ' trying again.');
                     continue;
                 }
             }
@@ -145,10 +145,10 @@ class JMF extends BaseJDF
             if ((int)$result->Response->attributes()->ReturnCode > 0) {
 
                 if($attempts == $attempt_limit){
-                    Log::debug($result->asXML());
+                    Log::info($result->asXML());
                     throw new JMFReturnCodeException((string)$result->Response->Notification->Comment);    
                 }else{
-                    Log::debug("Exception from JMF server: " . (string)$result->Response->Notification->Comment . ' trying again.');
+                    Log::info("Exception from JMF server: " . (string)$result->Response->Notification->Comment . ' trying again.');
                     continue;
                 }
             }
